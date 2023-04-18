@@ -1,0 +1,316 @@
+---
+title: <font color="#8D38C9">"Diamonds"</font>
+output: html_document
+---
+<font color="#8D38C9">Verimin linki
+https://www.kaggle.com/shivam2503/diamonds
+</font>
+
+
+
+```{r}
+library(readr)
+diamonds <- read_delim("diamonds.csv", ";", 
+    escape_double = FALSE, trim_ws = TRUE)
+View(diamonds)
+```
+<font color="#F433FF">price
+price in US dollars (\$326--\$18,823)
+carat
+weight of the diamond (0.2--5.01)
+cut
+quality of the cut (Fair, Good, Very Good, Premium, Ideal)
+color
+diamond colour, from J (worst) to D (best)
+clarity
+a measurement of how clear the diamond is (I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best))
+x
+length in mm (0--10.74)
+y
+width in mm (0--58.9)
+z
+depth in mm</font>
+
+
+
+
+
+```{r}
+library(ggplot2)
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point()
+```
+
+<font color="#FF00FF">Carat ve priceı karşılaştırıyorum, carat arttıkça price da artıyor, gözlemlediğim uç değerler için de geçerli. Yani bu grafiğe bakınca fiyat ve karat doğru orantılı diyebiliyorum.</font>
+
+
+```{r}
+Diamonds <- ggplot(diamonds, aes(x=carat, y=price))
+```
+
+
+<font color="#46C7C7">İleride kullanmak üzere bu grafiği Diamonds olarak atıyorum </font>
+
+```{r}
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  geom_smooth()
+```
+
+<font color="#F660AB">Aynı değişkenler için uç değerlerin normal dağılımı engellediğini ve dağılım eğrisinin dalgalı hale geldiğini görüyorum</font>
+
+
+
+
+
+```{r}
+ggplot(diamonds, aes(x=carat, y=price)) + geom_point() + geom_smooth(se=FALSE, method="lm")
+```
+
+<font color="#348781">Bu grafikle linear modelmiş gibi davranarak aykırı değerler dışında dağılımın nereye kadar doğrusal ilerleyebildiğini büyük resim olarak görüyorum.</font>
+
+
+```{r}
+ggplot(diamonds, aes(x = carat, y = price, colour= clarity)) +
+geom_point(alpha= 0.4)
+```
+
+
+
+<font color="#7D1B7E">Bu grafikte yine price ve carata bakıyorum ama bu kez claritye göre yazdırıyorum. Çıkan outputtan da uç değerlerin çoğunlukla karatı yüksek ve clarity kodu I1 olanlardan oluştuğunu görüyorum. Kısaca fiyat ve karat karşılaştırmasını saydamlık kodlarına göre tekrar yazdırmış oluyorum.</font>
+
+
+```{r}
+Diamonds + 
+  geom_point(alpha=0.2)+
+  geom_smooth(aes(color = clarity), se=F)
+```
+
+
+<font color="#5CB3FF">Aynı değişkenlerle yaptığım karşılaştırmaları bir de nokta değil de line çizerek kontrol etmek istiyorum.Claritysi I1 olan elmasların fiyatlarının karat arttıkça arttığını ama VS2 olan elmasların fiyatlarının 3 karattan sonra azaldığını ve bunun gibi diğer clarityleri gözlemleyebiliyorum</font>
+
+
+```{r}
+ggplot(diamonds, aes(x=carat, y=price, color=cut)) + geom_point() + facet_wrap(~ clarity)
+```
+
+
+<font color="#2B60DE">Clarity değişkenimin herbir kategorisi için fşyat ve kesimini inceliyorum. Fiyatını soldaki çizgilerle; kesimini sağda belirlediğim renklendirmeler ile gösterebiliyorum</font>
+
+
+
+```{r}
+ggplot(diamonds, aes(x=carat, y=price, color=cut)) + geom_point() + facet_grid(color ~ clarity)
+```
+
+
+<font color="#E4317F">Üstteki grafiğe bir de sol tarafa renkleri ekliyorum ve neredeyse önemli olan tüm değişkenlerime birlikte bakabiliyorum</font>
+
+
+
+
+```{r}
+ggplot(diamonds, aes(x = clarity, y = color,color=cut,group=clarity)) +
+  geom_line() +
+  geom_point()
+```
+
+
+<font color="#D462FF">üç farklı değişkenime bu grafikle de bakabilirim ama yukarıda denediklerim kadar anlaşılır olmaz, bu yüzden bu grafiği ileride karşıma çıkabilecek başka bir veri için kullanmak daha mantıklı olur</font>
+
+
+
+
+```{r}
+
+##Star Plot
+data_sorted <- diamonds[order(diamonds$cut),]
+
+#Datayı dilimleme
+library(ggplot2)
+data_sorted$group <- as.numeric(cut_number(as.numeric(rownames(data_sorted)), 10)) 
+
+library(dplyr)
+data_star<-data_sorted %>%
+  group_by(group) %>% 
+  dplyr::summarize(Yoğunluk= mean(depth_mm),Uzunluk= mean(length_mm),Price= mean(price))
+
+stars(data_star[,-1], key.loc = c(15,1.25),main = "Starplot",label=row.names(data_star),cex=.7)
+```
+
+
+<font color="#3B9C9C">Starplot grafiğimden (3-7-9), (1-6), (5-8-10) kümelerinin kendi içlerinde birbirlerine yakın gözlemler içerdiğini görüyorum</font>
+
+
+```{r}
+#Contour density
+ggplot(diamonds, aes(x=table, y=price)) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon")
+```
+
+
+<font color="#C8B560">Bu grafikten price ve table arasında güçlü bir ilişki olmadığını anlıyorum. Tableın 56 ve priceın 2000 civarı olduğu kısımda yığılma olduğunu gözlemliyorum.</font>
+
+
+```{r}
+ggplot(data = diamonds, mapping = aes(x = cut, fill = clarity)) + 
+  geom_bar(alpha = 1/5, position = "dodge")
+```
+
+
+<font color="#6698FF">Cut değişkenimi sayısına göre fakat yine claritysine yani saydamlığına bakarak gözlemliyorum. Ideal kesilmiş elmaslardan saydamlığı VS2 olan türün sayısının daha fazla olduğunu görüyorum ve ortalama bir kesim olduğu için daha çok talep gördüğü için daha çok üretildiğini düşünüyorum.##
+##Identity ya da fill yerine dodge kullanmamın sebebi ise aynı özellikte olan grupların karşılaştırmasını kolaylaştırması ve üst üste yığılım yerine nesnelerin birbirlerinin yanına gelmesi</font>
+
+
+
+
+```{r}
+ggplot(diamonds,aes(x = "cut", fill=clarity)) + 
+  geom_bar(width = 1) + 
+  coord_polar (theta="y")
+```
+
+
+<font color="#C25283">Aynı gözlemi bir de pasta grafiğinden yapmayı deniyorum ve clarity kodu VS2 olan ile SI1 olan elmasların sayısını grafiğe baktığımda renklerden dolayı göz yanılması yaşayarak olduğundan farklı yani VS2 yerine SI1'den daha çok varmış gibi görüyorum. Pasta grafiklerinden çıplak gözle adete göre analizi yapmanın çok sağlıksız olduğu kararına varıyorum.</font>
+
+
+
+
+```{r}
+#BUBBLE PLOT
+ggplot(diamonds, aes(carat,cut, color=price, size=price))+
+  geom_point(alpha=0.5)+
+  scale_color_gradientn(colors =rainbow(unique(diamonds$price))) +
+  theme(legend.position = "right")
+```
+
+
+<font color="#348781">Yazdırdığım bubble plotta ise karatın derecelerine göre fiyatın nasıl dağıldığını görüyorum. Fakat bu iki değişkenden bir analiz yapacak olursam diğer grafiklerin daha sağlıklı sonuç verdiğini ve analizimde onları kullanmak isteyeceğimi söyleyebilirim</font>
+
+
+
+
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = cut), show.legend = FALSE, width = 1) + 
+  theme(aspect.ratio = 1) +
+  labs(x = NULL, y = NULL)+ 
+  coord_flip()+ 
+  coord_polar()
+```
+
+
+<font color="#3B9C9C">Şimdi de (cut) kesimin türüne göre miktarına bakıyorum. Bu grafikten de daha önce yaptığım analiz gibi ideal cut olan kesim seçeneğinin daha çok üretildiğini görüyorum</font>
+
+
+
+```{r}
+ggplot(diamonds,aes(cut, fill=cut))+
+  geom_bar()+
+  coord_polar(theta = "y")
+```
+
+
+
+<font color="#B93B8F">Yapmış olduğum çıkarımı da kanıtlamak için bu kez daha önce clarity kullanarak yaptığımın biraz benzeri ile cut değişkenimi yanda açıklayıcı olarak belirterek lejant kullanıyorum. Elimde cut başlığı altında 5 farklı kategori olduğu için lejant gösterimini yerinde kullandığımı düşünüyorum. Bu grafiğimden de kendi eksenini tamamladığını gördüğüm ideal kesimin yine en çok sayıda olduğunu göstermiş oluyorum.</font>
+
+
+
+
+
+```{r}
+ggplot(diamonds, aes(x=length_mm, y=depth_mm, color=cut)) + geom_line()
+```
+
+
+<font color="#8B31C7">Burada mm'ye göre yoğunluk ve mm'ye göre uzunluğa cuta göre bakıyorum. Sapmaları aralıklara ve sağda belirttiğim renklere göre tespit edebiliyorum.</font>
+
+
+```{r}
+ggplot(diamonds, aes(x=price, color=cut)) + geom_density()
+```
+
+
+<font color="#387C44">cuta göre price ve densitye bakıyorum ideal kesimin gerçekten her konuda olduğu gibi düşük fiyatlarda da yine yoğunluk olarak iyi olduğunu görüyorum.</font>
+
+
+```{r}
+ggplot(diamonds, aes(x = cut, y = carat, fill = clarity)) +
+  geom_boxplot(position = position_dodge(width = 0.9)) +
+  stat_summary(fun = median,geom = 'line',
+               aes(group = clarity, colour = clarity),size=1,
+               position = position_dodge(width = 0.9)
+  )
+```
+
+
+<font color="#E77471">Bu boxplot grafiğinde claritye göre cut ve carat değişkenini inceliyorum, neredeyse her cut kategorisinde aykırı değerler gözlemliyorum</font>
+
+
+```{r}
+diamonds %>%
+  ggplot(aes(x=cut,y=price, color=cut)) +
+  geom_boxplot()
+```
+
+
+<font color="#6960EC">Bu boxplot grafiğinde ise cut ve price grafiğini inceliyorum fakat aykırı değerleri bir önceki kadar net göremiyorum</font>
+
+
+
+```{r}
+#Histogram+Yogunluk bırlıkte
+ggplot(diamonds,aes(price))+
+  geom_histogram(aes(y=..density..))+
+  geom_density(alpha=.5,fill="lightblue")
+```
+
+
+<font color="#151B8D">Bu grafiğimde yoğunluğu ve fiyatı gözlemliyorum ve biri arttıkça diğerinin de arttığını; biri azalınca diğerinin de azaldığını yani iki değişkenin doğru orantılı olduğunu gözlemliyorum</font>
+
+
+
+```{r}
+new= 
+  diamonds %>%
+  group_by(color, cut) %>%
+  summarise(n=n()) %>%
+  group_by(cut) %>%
+  mutate(sum.n= sum(n)) %>%
+  ungroup() %>%
+  mutate(n2= n/sum.n) %>%
+  select(color, cut, n2)
+new %>%
+  ggplot(aes(color, cut)) +
+  geom_tile(aes(fill=n2*100), colour = "white") +
+  scale_fill_gradient(low="white",high="blue") +
+  labs(fill = "Density")
+```
+
+
+<font color="#893BFF">Densitye göre cut ve color değişkenleriin arasındaki ilişkiyi anlamak için bir başka yol da bu grafik, rengin açık veya koyu oluşuna göre aralarındaki ilişkiyi yorumlayabiliyorum. Mesela G renginde ideal kesim yapılmış bir elmasın yoğunluğu çok daha yüksek veya J renginde ideal kesim yapılan elmasın yoğunluğu çok daha düşük diyebilirim</font>
+
+
+```{r}
+##Chernoff Faces 
+#install.packages("aplpack")
+library(aplpack)
+
+library(dplyr)
+new_data<-diamonds%>%
+  group_by(cut) %>%
+  dplyr::summarize(mean_price = mean(price),mean_length_mm = mean(length_mm),mean_depth_mm = mean(depth_mm))
+
+faces(new_data[,-1],  labels=as.character(new_data$cut))
+```
+
+
+<font color="#F88158">Chernoff face outputuma baktığımda cut değişkenimin kategorilerinin yüz olarak bastırıldığında nasıl ifadelerle karşıma çıktığını görüyorum</font>
+
+
+
+<font color="#82CAFA">Zeynep</font>
+<font color="#FAAFBE">Ecem</font>
+<font color="#3B9C9C">Güneş</font>
+<font color="#54C571">20181101017</font>
